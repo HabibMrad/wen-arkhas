@@ -1,15 +1,18 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "docker"
+    "builder": "dockerfile",
+    "buildCommand": "pip install -r requirements.txt"
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
-    "restartPolicyMaxRetries": 3
+    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port 8000",
+    "restartPolicyMaxRetries": 3,
+    "healthcheckPath": "/health"
   },
   "env": {
     "PYTHONUNBUFFERED": "1",
-    "PYTHONDONTWRITEBYTECODE": "1"
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PORT": "8000"
   }
 }
