@@ -1,0 +1,41 @@
+# Backend
+backend/venv/
+backend/.env
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+backend/*.egg-info/
+backend/dist/
+backend/build/
+backend/.mypy_cache/
+backend/.idea/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/.env.production.local
+frontend/out/
+frontend/dist/
+frontend/.idea/
+
+# General
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.env
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Temporary files
+/tmp/
+*.tmp
