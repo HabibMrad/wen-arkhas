@@ -1,7 +1,7 @@
 """
-Embedding service using sentence-transformers for semantic search.
+Embedding service using OpenAI API for semantic search.
 
-Converts text to dense vectors using pre-trained models.
+Converts text to dense vectors using OpenAI's embedding models.
 Used for creating embeddings of products and user queries.
 """
 
@@ -13,50 +13,55 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 try:
-    from sentence_transformers import SentenceTransformer
+    from openai import OpenAI, APIError
 except ImportError:
-    logger.warning("sentence-transformers not installed. Install with: pip install sentence-transformers")
-    SentenceTransformer = None
+    logger.warning("openai not installed. Install with: pip install openai")
+    OpenAI = None
+    APIError = None
 
 
 class EmbeddingService:
     """
-    Service for creating text embeddings using sentence-transformers.
+    Service for creating text embeddings using OpenAI API.
 
-    Uses all-MiniLM-L6-v2 model by default:
-    - 384 dimensions
-    - Fast inference
-    - Good semantic understanding
+    Uses text-embedding-3-small model by default:
+    - 1536 dimensions
+    - Fast API-based inference
+    - High quality semantic understanding
     - Suitable for product matching
+    - No local model download needed (reduces image size)
     """
 
     def __init__(self, model_name: Optional[str] = None):
         """
-        Initialize embedding service.
+        Initialize embedding service with OpenAI client.
 
         Args:
-            model_name: Model to use (default: all-MiniLM-L6-v2)
+            model_name: Model to use (default: text-embedding-3-small)
         """
-        if SentenceTransformer is None:
-            logger.error("sentence-transformers not installed")
-            self.model = None
+        if OpenAI is None:
+            logger.error("openai not installed")
+            self.client = None
+            self.model_name = None
             return
 
         self.model_name = model_name or settings.embedding_model
-        self.model = None
         self.cache = {}
+        self.client = None
+
         logger.info(f"Initializing EmbeddingService with model: {self.model_name}")
 
         try:
-            self.model = SentenceTransformer(self.model_name)
-            logger.info(f"Loaded embedding model: {self.model_name}")
+            # OpenAI client reads OPENAI_API_KEY from environment automatically
+            self.client = OpenAI(api_key=settings.openai_api_key)
+            logger.info(f"Initialized OpenAI client for embeddings: {self.model_name}")
         except Exception as e:
-            logger.error(f"Failed to load embedding model: {str(e)}")
-            self.model = None
+            logger.error(f"Failed to initialize OpenAI client: {str(e)}")
+            self.client = None
 
     async def embed_text(self, text: str) -> Optional[List[float]]:
         """
-        Embed a text string into a vector.
+        Embed a text string into a vector using OpenAI API.
 
         Args:
             text: Text to embed
@@ -68,8 +73,8 @@ class EmbeddingService:
             logger.warning("Empty text to embed")
             return None
 
-        if self.model is None:
-            logger.error("Embedding model not loaded")
+        if self.client is None:
+            logger.error("OpenAI client not initialized")
             return None
 
         try:
@@ -78,9 +83,13 @@ class EmbeddingService:
                 logger.debug(f"Cache hit for embedding: {text[:50]}...")
                 return self.cache[text]
 
-            # Embed text
-            embeddings = self.model.encode([text], normalize_embeddings=True)
-            vector = embeddings[0].tolist()
+            # Call OpenAI API
+            response = self.client.embeddings.create(
+                input=text,
+                model=self.model_name
+            )
+
+            vector = response.data[0].embedding
 
             # Cache result
             self.cache[text] = vector
@@ -94,7 +103,7 @@ class EmbeddingService:
 
     async def embed_texts(self, texts: List[str]) -> Optional[List[List[float]]]:
         """
-        Embed multiple texts in batch.
+        Embed multiple texts in batch using OpenAI API.
 
         More efficient than embedding texts one-by-one.
 
@@ -108,8 +117,8 @@ class EmbeddingService:
             logger.warning("Empty texts list to embed")
             return None
 
-        if self.model is None:
-            logger.error("Embedding model not loaded")
+        if self.client is None:
+            logger.error("OpenAI client not initialized")
             return None
 
         try:
@@ -127,8 +136,12 @@ class EmbeddingService:
 
             # Embed uncached texts
             if uncached:
-                embeddings = self.model.encode(uncached, normalize_embeddings=True)
-                uncached_vectors = [e.tolist() for e in embeddings]
+                response = self.client.embeddings.create(
+                    input=uncached,
+                    model=self.model_name
+                )
+
+                uncached_vectors = [item.embedding for item in response.data]
 
                 # Cache results
                 for text, vector in zip(uncached, uncached_vectors):

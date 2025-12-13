@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     # API Keys
     openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "")
+    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     google_places_api_key: str = os.getenv("GOOGLE_PLACES_API_KEY", "")
     pinecone_api_key: str = os.getenv("PINECONE_API_KEY", "")
 
@@ -51,8 +52,8 @@ class Settings(BaseSettings):
     max_longitude: float = 36.6
 
     # Embeddings Configuration
-    embedding_model: str = "all-MiniLM-L6-v2"
-    embedding_dimension: int = 384
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimension: int = 1536
 
     # API Configuration
     api_prefix: str = "/api"
