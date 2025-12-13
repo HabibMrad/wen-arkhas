@@ -8,6 +8,7 @@ langchain>=0.1.0
 httpx>=0.26.0
 pinecone>=2.2.4
 openai>=1.0.0
+numpy>=1.24.0
 redis>=5.0.0
 playwright>=1.41.0
 beautifulsoup4>=4.12.3
