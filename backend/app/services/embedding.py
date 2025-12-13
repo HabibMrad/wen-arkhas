@@ -1,67 +1,53 @@
 """
-Embedding service using OpenAI API for semantic search.
+Embedding service using OpenRouter API for semantic search.
 
-Converts text to dense vectors using OpenAI's embedding models.
+Converts text to dense vectors using OpenRouter's embedding models.
 Used for creating embeddings of products and user queries.
 """
 
 import logging
 from typing import List, Optional
 import numpy as np
+import httpx
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-try:
-    from openai import OpenAI, APIError
-except ImportError:
-    logger.warning("openai not installed. Install with: pip install openai")
-    OpenAI = None
-    APIError = None
-
 
 class EmbeddingService:
     """
-    Service for creating text embeddings using OpenAI API.
+    Service for creating text embeddings using OpenRouter API.
 
-    Uses text-embedding-3-small model by default:
+    Uses text-embedding-3-small model via OpenRouter:
     - 1536 dimensions
-    - Fast API-based inference
+    - API-based inference (no local model needed)
     - High quality semantic understanding
     - Suitable for product matching
-    - No local model download needed (reduces image size)
+    - Reduces Docker image size significantly
     """
 
     def __init__(self, model_name: Optional[str] = None):
         """
-        Initialize embedding service with OpenAI client.
+        Initialize embedding service with OpenRouter client.
 
         Args:
             model_name: Model to use (default: text-embedding-3-small)
         """
-        if OpenAI is None:
-            logger.error("openai not installed")
-            self.client = None
-            self.model_name = None
-            return
-
         self.model_name = model_name or settings.embedding_model
+        self.api_key = settings.openrouter_api_key
         self.cache = {}
-        self.client = None
+        self.base_url = "https://openrouter.ai/api/v1"
 
-        logger.info(f"Initializing EmbeddingService with model: {self.model_name}")
+        logger.info(f"Initializing EmbeddingService with OpenRouter model: {self.model_name}")
 
-        try:
-            # OpenAI client reads OPENAI_API_KEY from environment automatically
-            self.client = OpenAI(api_key=settings.openai_api_key)
-            logger.info(f"Initialized OpenAI client for embeddings: {self.model_name}")
-        except Exception as e:
-            logger.error(f"Failed to initialize OpenAI client: {str(e)}")
-            self.client = None
+        if not self.api_key:
+            logger.warning("OPENROUTER_API_KEY not set. Embeddings will fail.")
+        else:
+            logger.info(f"OpenRouter client initialized for embeddings: {self.model_name}")
 
     async def embed_text(self, text: str) -> Optional[List[float]]:
         """
-        Embed a text string into a vector using OpenAI API.
+        Embed a text string into a vector using OpenRouter API.
 
         Args:
             text: Text to embed
@@ -73,8 +59,8 @@ class EmbeddingService:
             logger.warning("Empty text to embed")
             return None
 
-        if self.client is None:
-            logger.error("OpenAI client not initialized")
+        if not self.api_key:
+            logger.error("OPENROUTER_API_KEY not configured")
             return None
 
         try:
@@ -83,13 +69,17 @@ class EmbeddingService:
                 logger.debug(f"Cache hit for embedding: {text[:50]}...")
                 return self.cache[text]
 
-            # Call OpenAI API
-            response = self.client.embeddings.create(
-                input=text,
-                model=self.model_name
-            )
+            # Call OpenRouter API
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/embeddings",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    json={"input": text, "model": self.model_name}
+                )
+                response.raise_for_status()
+                data = response.json()
 
-            vector = response.data[0].embedding
+            vector = data["data"][0]["embedding"]
 
             # Cache result
             self.cache[text] = vector
@@ -103,7 +93,7 @@ class EmbeddingService:
 
     async def embed_texts(self, texts: List[str]) -> Optional[List[List[float]]]:
         """
-        Embed multiple texts in batch using OpenAI API.
+        Embed multiple texts in batch using OpenRouter API.
 
         More efficient than embedding texts one-by-one.
 
@@ -117,8 +107,8 @@ class EmbeddingService:
             logger.warning("Empty texts list to embed")
             return None
 
-        if self.client is None:
-            logger.error("OpenAI client not initialized")
+        if not self.api_key:
+            logger.error("OPENROUTER_API_KEY not configured")
             return None
 
         try:
@@ -136,12 +126,16 @@ class EmbeddingService:
 
             # Embed uncached texts
             if uncached:
-                response = self.client.embeddings.create(
-                    input=uncached,
-                    model=self.model_name
-                )
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{self.base_url}/embeddings",
+                        headers={"Authorization": f"Bearer {self.api_key}"},
+                        json={"input": uncached, "model": self.model_name}
+                    )
+                    response.raise_for_status()
+                    data = response.json()
 
-                uncached_vectors = [item.embedding for item in response.data]
+                uncached_vectors = [item["embedding"] for item in data["data"]]
 
                 # Cache results
                 for text, vector in zip(uncached, uncached_vectors):

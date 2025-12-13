@@ -8,7 +8,6 @@ class Settings(BaseSettings):
 
     # API Keys
     openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "")
-    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     google_places_api_key: str = os.getenv("GOOGLE_PLACES_API_KEY", "")
     pinecone_api_key: str = os.getenv("PINECONE_API_KEY", "")
 
