@@ -66,19 +66,11 @@ export default function ResultsPage() {
   ) => {
     setIsSearching(true)
     try {
-      let finalResult = null
-      const generator = streamSearch(query, location)
+      // Start streaming search
+      await streamSearch(query, location)
 
-      for await (const event of generator) {
-        if (event.status === 'complete' && event.data) {
-          finalResult = event.data
-        }
-      }
-
-      if (finalResult) {
-        const store = useSearchStore.getState()
-        store.setCurrentSearch(finalResult)
-      }
+      // After search completes, result is available in the hook state
+      // The search updates the store with the final result
     } catch (error) {
       console.error('Search error:', error)
       alert('Search failed. Please try again.')
