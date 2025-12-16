@@ -13,7 +13,7 @@
 'use client'
 
 import Image from 'next/image'
-import { StarIcon, MapPinIcon, ExclamationIcon } from '@heroicons/react/24/solid'
+import { StarIcon, MapPinIcon } from '@heroicons/react/24/solid'
 import { HeartIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 import type { Product } from '@/lib/api'
 
