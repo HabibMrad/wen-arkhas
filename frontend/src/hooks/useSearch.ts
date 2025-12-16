@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { getAPIClient } from '@/lib/api'
-import type { SearchRequest, SearchResponse, StreamEvent } from '@/lib/api'
+import type { SearchResponse } from '@/lib/api'
 
 // Search state
 interface SearchState {
