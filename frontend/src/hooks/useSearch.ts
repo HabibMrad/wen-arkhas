@@ -2,7 +2,7 @@
  * Custom React hooks for search functionality
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { getAPIClient } from '@/lib/api'
 import type { SearchRequest, SearchResponse, StreamEvent } from '@/lib/api'
 

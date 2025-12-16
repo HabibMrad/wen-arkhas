@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand'
-import type { SearchResponse, StreamEvent } from '@/lib/api'
+import type { SearchResponse } from '@/lib/api'
 
 interface SearchHistory {
   id: string
