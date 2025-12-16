@@ -7,6 +7,8 @@
  * - Product grid
  * - Map view
  * - Analysis/Recommendations
+ *
+ * Shows detailed product matches with store information and pricing.
  */
 
 'use client'
