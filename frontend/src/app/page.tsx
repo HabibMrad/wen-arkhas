@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation'
 import { SearchInput } from '@/components/SearchInput'
 import { useSearchStore } from '@/store/searchStore'
 import { useStreamSearch } from '@/hooks/useSearch'
-import { SparklesIcon, MapPinIcon, Zap } from '@heroicons/react/24/outline'
+import { SparklesIcon, MapPinIcon, BoltIcon } from '@heroicons/react/24/outline'
 
 export default function HomePage() {
   const router = useRouter()
@@ -170,7 +170,7 @@ export default function HomePage() {
           {/* Feature 3 */}
           <div className="space-y-3">
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-              <Zap className="h-6 w-6 text-primary-600" />
+              <BoltIcon className="h-6 w-6 text-primary-600" />
             </div>
             <h4 className="font-semibold text-gray-900">Lightning Fast</h4>
             <p className="text-gray-600 text-sm">

@@ -14,7 +14,7 @@
 
 import Image from 'next/image'
 import { StarIcon, MapPinIcon, ExclamationIcon } from '@heroicons/react/24/solid'
-import { HeartIcon, ExternalLinkIcon } from '@heroicons/react/24/outline'
+import { HeartIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 import type { Product } from '@/lib/api'
 
 interface ProductCardProps {
@@ -160,7 +160,7 @@ export function ProductCard({
           className="w-full mt-4 py-2 px-3 bg-primary-100 text-primary-700 rounded-lg font-medium text-sm hover:bg-primary-200 transition-colors duration-200 flex items-center justify-center gap-2"
         >
           View Product
-          <ExternalLinkIcon className="h-4 w-4" />
+          <ArrowTopRightOnSquareIcon className="h-4 w-4" />
         </a>
       </div>
     </div>
