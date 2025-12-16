@@ -11,7 +11,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchInput } from '@/components/SearchInput'
 import { useSearchStore } from '@/store/searchStore'
@@ -21,28 +21,15 @@ import { SparklesIcon, MapPinIcon, BoltIcon } from '@heroicons/react/24/outline'
 export default function HomePage() {
   const router = useRouter()
   const [isSearching, setIsSearching] = useState(false)
-  const { streamSearch } = useStreamSearch()
+  const { streamSearch, result } = useStreamSearch()
   const setCurrentSearch = useSearchStore((state) => state.setCurrentSearch)
   const searchHistory = useSearchStore((state) => state.searchHistory)
 
   const handleSearch = async (query: string, location: { lat: number; lng: number }) => {
     setIsSearching(true)
     try {
-      // Start streaming search and collect final result
-      let finalResult = null
-      const generator = streamSearch(query, location)
-
-      for await (const event of generator) {
-        // In a real implementation, we'd update progress UI here
-        if (event.status === 'complete' && event.data) {
-          finalResult = event.data
-        }
-      }
-
-      if (finalResult) {
-        setCurrentSearch(finalResult)
-        router.push('/results')
-      }
+      // Start streaming search
+      await streamSearch(query, location)
     } catch (error) {
       console.error('Search error:', error)
       alert('Search failed. Please try again.')
@@ -50,6 +37,14 @@ export default function HomePage() {
       setIsSearching(false)
     }
   }
+
+  // Navigate to results when search completes
+  useEffect(() => {
+    if (result && !isSearching) {
+      setCurrentSearch(result)
+      router.push('/results')
+    }
+  }, [result, isSearching, setCurrentSearch, router])
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-primary-50 to-white">
