@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { getAPIClient } from '@/lib/api'
-import type { SearchResponse } from '@/lib/api'
+import type { SearchResponse, StreamEvent } from '@/lib/api'
 
 // Search state
 interface SearchState {
@@ -17,13 +17,6 @@ interface SearchState {
   searchId: string | null
 }
 
-// Stream progress
-interface StreamProgress {
-  searchId: string
-  node: string
-  status: string
-  data: Record<string, any>
-}
 
 /**
  * useSearch - Hook for standard search
@@ -104,7 +97,7 @@ export function useStreamSearch() {
     searchId: null,
   })
 
-  const [progress, setProgress] = useState<StreamProgress | null>(null)
+  const [progress, setProgress] = useState<StreamEvent | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const apiClient = getAPIClient()
 
@@ -129,7 +122,7 @@ export function useStreamSearch() {
             break
           }
 
-          setProgress(event as StreamProgress)
+          setProgress(event)
 
           if (event.status === 'error') {
             throw new Error(event.message || 'Stream error')
