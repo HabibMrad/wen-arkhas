@@ -97,8 +97,13 @@ class APIClient {
   private client: AxiosInstance
   private baseURL: string
 
-  constructor(baseURL = 'http://localhost:8000') {
-    this.baseURL = baseURL
+  constructor(baseURL?: string) {
+    // Use provided baseURL, or read from environment variable, or default to localhost
+    this.baseURL = baseURL ||
+      (typeof window === 'undefined'
+        ? process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+        : process.env.NEXT_PUBLIC_BACKEND_URL || window.location.origin)
+
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 30000,

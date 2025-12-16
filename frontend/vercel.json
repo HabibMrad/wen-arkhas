@@ -3,9 +3,6 @@
   "outputDirectory": ".next",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@wen_arkhas_api_url"
-  },
   "git": {
     "deploymentEnabled": {
       "main": true
