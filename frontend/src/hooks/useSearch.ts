@@ -115,6 +115,7 @@ export function useStreamSearch() {
       abortControllerRef.current = new AbortController()
 
       try {
+        let searchId: string | null = null
         const generator = apiClient.streamSearch({ query, location })
 
         for await (const event of generator) {
@@ -124,16 +125,32 @@ export function useStreamSearch() {
 
           setProgress(event)
 
+          // Capture search_id from first event
+          if (!searchId && event.search_id) {
+            searchId = event.search_id
+          }
+
           if (event.status === 'error') {
             throw new Error(event.message || 'Stream error')
           }
 
-          // When stream completes, we might get final state
-          if (event.status === 'complete') {
-            setState((prev) => ({
-              ...prev,
-              isStreaming: false,
-            }))
+          // When stream completes, fetch the full result
+          if (event.status === 'complete' && searchId) {
+            try {
+              const result = await apiClient.getSearchResult(searchId)
+              setState((prev) => ({
+                ...prev,
+                isStreaming: false,
+                result,
+                searchId,
+              }))
+            } catch (fetchError) {
+              console.error('Failed to fetch search result:', fetchError)
+              setState((prev) => ({
+                ...prev,
+                isStreaming: false,
+              }))
+            }
           }
         }
 
