@@ -316,10 +316,8 @@ async def search_stream_generator(
         # Get workflow
         workflow = get_workflow()
 
-        # Execute workflow to get final result
-        workflow_result = await workflow.invoke(query, location)
-
-        # Stream events and capture the final result
+        # Stream events and capture the final state
+        workflow_result = None
         async for event in workflow.invoke_streaming(query, location):
             payload = {
                 "search_id": search_id,
@@ -328,8 +326,17 @@ async def search_stream_generator(
             yield json.dumps(payload) + "\n"
             await asyncio.sleep(0.1)  # Brief delay between events
 
+            # Capture the final result from the complete event
+            if event.get("status") == "complete" and not workflow_result:
+                # We need to get the full workflow result here
+                # For now, we'll need to execute once more to get the formatted result
+                pass
+
+        # Execute workflow one more time to get the final formatted result for caching
+        logger.info(f"Streaming search {search_id}: Fetching final result for caching")
+        workflow_result = await workflow.invoke(query, location)
+
         # Format and cache the final result
-        logger.info(f"Streaming search {search_id}: Formatting and caching result")
         response = await format_search_response(
             search_id,
             query,
