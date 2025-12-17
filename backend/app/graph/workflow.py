@@ -101,25 +101,9 @@ class WorkflowBuilder:
         # If query parsing fails or produces no valid output, still continue
         workflow.add_edge("parse_query", "discover_stores")
 
-        # Store discovery: retry if < 3 stores found (max 2 retries)
-        def should_retry_stores(state: SearchState) -> str:
-            """Conditional routing for store discovery."""
-            stores = state.get("stores", [])
-            retry_count = len([e for e in state.get("errors", []) if "discover_stores" in e])
-
-            if len(stores) < 3 and retry_count < 2:
-                logger.warning(f"Only {len(stores)} stores found, retrying...")
-                return "retry_stores"
-            return "continue_scraping"
-
-        workflow.add_conditional_edges(
-            "discover_stores",
-            should_retry_stores,
-            {
-                "retry_stores": "discover_stores",
-                "continue_scraping": "scrape_products",
-            }
-        )
+        # Store discovery: proceed without retry to avoid infinite loops
+        # TODO: Fix retry logic to properly track retry attempts
+        workflow.add_edge("discover_stores", "scrape_products")
 
         # Scraping: proceed even if 0 products (RAG will handle empty list)
         workflow.add_edge("scrape_products", "match_products")
