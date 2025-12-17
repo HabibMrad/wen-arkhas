@@ -316,7 +316,10 @@ async def search_stream_generator(
         # Get workflow
         workflow = get_workflow()
 
-        # Stream events
+        # Execute workflow to get final result
+        workflow_result = await workflow.invoke(query, location)
+
+        # Stream events and capture the final result
         async for event in workflow.invoke_streaming(query, location):
             payload = {
                 "search_id": search_id,
@@ -325,7 +328,17 @@ async def search_stream_generator(
             yield json.dumps(payload) + "\n"
             await asyncio.sleep(0.1)  # Brief delay between events
 
-        logger.info(f"Streaming search {search_id}: Completed")
+        # Format and cache the final result
+        logger.info(f"Streaming search {search_id}: Formatting and caching result")
+        response = await format_search_response(
+            search_id,
+            query,
+            location,
+            workflow_result
+        )
+        _search_cache[search_id] = (response, datetime.utcnow())
+
+        logger.info(f"Streaming search {search_id}: Completed and cached")
 
     except Exception as e:
         logger.error(f"Streaming search {search_id} error: {str(e)}")
