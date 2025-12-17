@@ -203,8 +203,8 @@ class WorkflowExecutor:
         logger.info(f"Starting workflow - Query: {query}, Location: {location}")
 
         try:
-            # Execute workflow
-            result = await self.graph.ainvoke(state)
+            # Execute workflow with increased recursion limit for retry logic
+            result = await self.graph.ainvoke(state, {"recursion_limit": 100})
 
             logger.info(f"Workflow completed successfully")
             logger.debug(f"Result stores: {len(result.get('stores', []))}")
@@ -245,8 +245,8 @@ class WorkflowExecutor:
         logger.info(f"Starting streaming workflow with all 5 agents")
 
         try:
-            # Stream events from graph execution
-            async for event in self.graph.astream(state):
+            # Stream events from graph execution with increased recursion limit for retry logic
+            async for event in self.graph.astream(state, {"recursion_limit": 100}):
                 # event is a dict with node name as key
                 for node_name, node_state in event.items():
                     if node_name not in ["__start__", "__end__"]:
