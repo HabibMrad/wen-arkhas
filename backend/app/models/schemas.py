@@ -112,6 +112,7 @@ class SearchResponse(BaseModel):
     location: LocationModel = Field(..., description="Search location")
     stores_found: int = Field(..., ge=0, description="Number of stores found")
     products_found: int = Field(..., ge=0, description="Number of products found")
+    stores: List[StoreModel] = Field(default_factory=list, description="Nearby stores")
     results: List[MatchedProduct] = Field(default_factory=list, description="Matched products")
     analysis: Optional[AnalysisResult] = Field(None, description="LLM analysis")
     cached: bool = Field(False, description="Was result from cache")
